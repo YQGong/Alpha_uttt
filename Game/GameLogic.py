@@ -11,6 +11,7 @@ Squares are stored and manipulated as (x,y) tuples.
 x is the column, y is the row.
 '''
 import numpy as np
+import pickle
 class Board():
 
     def __init__(self,n):
@@ -37,11 +38,11 @@ class Board():
         moves = set()  # stores the legal moves.
         
         if self.activation_zone==None:
-            return np.where(self.pieces==0)
+            return np.asarray(np.where(self.pieces==0),dtype=np.int8).transpose()
         
         sub_board=self.get_sub_board(self.activation_zone)
         legal_indices_sub=np.where(sub_board==0)
-        return to_board_index(legal_indices_sub,self.activation_zone)
+        return self.to_board_index(legal_indices_sub,self.activation_zone).transpose()
 
     def has_legal_moves(self, color):
         return not self.finished
@@ -61,37 +62,43 @@ class Board():
         last_move_sub_x,last_move_sub_y=self.last_move[1]
         
         # update the status of the current subboard to the main board
-        if sub_board_win(self.get_sub_board(self.last_move[0]),self.last_move[1]):
+        if self.sub_board_win(self.get_sub_board(self.last_move[0]),self.last_move[1]):
             self.main_pieces[last_move_zone_x,last_move_zone_y]=color
-            self.main_pieces_finished=1
+            self.main_pieces_finished[last_move_zone_x,last_move_zone_y]=1
             # check whether the current color wins:
-            if sub_board_win(self.main_pieces,self.last_move[0]):
-                self.finish=True
+            if self.sub_board_win(self.main_pieces,self.last_move[0]):
+                self.finished=True
                 self.winner=color
-        elif len(np.where(self.get_sub_board(self.last_move[0]))[0])==0:
-            self.main_pieces_finished=1
+                return self
+        elif len(np.where(self.get_sub_board(self.last_move[0])==0)[0])==0:
+            self.main_pieces_finished[last_move_zone_x,last_move_zone_y]=1
+        
+        if len(np.nonzero(self.main_pieces_finished.reshape(-1))[0])==9:
+            self.finished=True
+            return self
         
         # update the new activation zone
         if self.main_pieces_finished[last_move_sub_x,last_move_sub_y]==0:
             self.activation_zone=self.last_move[1]
         else:
             self.activation_zone=None
+        return self
 
     def get_sub_board(self,move):
         x,y=move
         return self.pieces[3*x:3*x+3,3*y:3*y+3]
 
-    def to_board_index(index_at_sub_board,sub_board_index):
+    def to_board_index(self,index_at_sub_board,sub_board_index):
         index_at_sub_board_x,index_at_sub_board_y=index_at_sub_board
         sub_board_x,sub_board_y=sub_board_index
-        return np.asarray([index_at_sub_board_x+3*sub_board_x,index_at_sub_board_y+3*sub_board_y])
+        return np.asarray([index_at_sub_board_x+3*sub_board_x,index_at_sub_board_y+3*sub_board_y],dtype=np.int8)
 
     def fill_test_pattern(self):
         for i in range(9):
             for j in range(9):
                 next_move(self.pieces,i,j,i*10+j)
 
-    def sub_board_win(sub_board,last_move):
+    def sub_board_win(self,sub_board,last_move):
         last_x,last_y=last_move
         last_c=sub_board[last_x,last_y]
         if len(set(sub_board[last_x]))==1:
@@ -103,3 +110,8 @@ class Board():
         if last_x+last_y==2 and len(set([sub_board[0,2],sub_board[1,1],sub_board[2,0]]))==1:
             return True
         return False
+    
+    def tostring(self):
+#         return pickle.dumps(self)
+#         return self.pieces.tostring()
+        return str(self.pieces)+str(self.activation_zone)
