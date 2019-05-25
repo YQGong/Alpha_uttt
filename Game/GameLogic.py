@@ -38,7 +38,15 @@ class Board():
         moves = set()  # stores the legal moves.
         
         if self.activation_zone==None:
-            return np.asarray(np.where(self.pieces==0),dtype=np.int8).transpose()
+            zones = np.asarray(np.where(self.main_pieces_finished==0),dtype=np.int8).transpose()
+            # print(self.main_pieces_finished)
+            # print(zones)
+            legal=[]
+            for zone in zones:
+                legal+=list(np.asarray(np.where(self.get_sub_board(zone)==0),dtype=np.int8).transpose()+zone*3)
+            # print(legal)
+            return np.array(legal)
+
         
         sub_board=self.get_sub_board(self.activation_zone)
         legal_indices_sub=np.where(sub_board==0)

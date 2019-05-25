@@ -53,6 +53,12 @@ class MCTS():
         s = board.tostring()
         # terminal node : return the value of the game
         if board.finished:
+            if s in self.Qs:
+                self.Qs[s] += -board.winner * color  # Qs : the value of the previous move
+                self.Ns[s] += self.times*self.process
+            else:
+                self.Qs[s] = -board.winner * color  # Qs : the value of the previous move
+                self.Ns[s] = self.times*self.process
             return -board.winner * color  # the negative of the value of the previous move
 
         # leaf node : return the value given by the nnet
@@ -81,7 +87,8 @@ class MCTS():
         #     print('legal moves : {}'.format(board.get_legal_moves(color)))
         for move in board.get_legal_moves(color):
             #         print(move)
-            smove = copy(board).execute_move(move, color).tostring()
+            bmove=copy(board).execute_move(move, color)
+            smove = bmove.tostring()
             if smove in self.Ns:
                 u = self.Qs[smove] / self.Ns[smove] + self.cpuct * math.sqrt(2 * math.log(self.Ns[s]) / self.Ns[smove])
             else:
