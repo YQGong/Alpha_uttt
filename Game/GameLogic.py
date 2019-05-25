@@ -11,8 +11,9 @@ Squares are stored and manipulated as (x,y) tuples.
 x is the column, y is the row.
 '''
 import numpy as np
-import pickle
-class Board():
+
+
+class Board:
 
     def __init__(self,n):
         "Set up initial board configuration."
@@ -35,19 +36,14 @@ class Board():
     def get_legal_moves(self, color):
         """Returns all the legal moves for the given color.
         """
-        moves = set()  # stores the legal moves.
-        
+        # no certain activation zone
         if self.activation_zone==None:
             zones = np.asarray(np.where(self.main_pieces_finished==0),dtype=np.int8).transpose()
-            # print(self.main_pieces_finished)
-            # print(zones)
             legal=[]
             for zone in zones:
                 legal+=list(np.asarray(np.where(self.get_sub_board(zone)==0),dtype=np.int8).transpose()+zone*3)
-            # print(legal)
             return np.array(legal)
-
-        
+        # in certain activation zone
         sub_board=self.get_sub_board(self.activation_zone)
         legal_indices_sub=np.where(sub_board==0)
         return self.to_board_index(legal_indices_sub,self.activation_zone).transpose()
@@ -63,6 +59,9 @@ class Board():
             raise Exception('execute move while the game is already finished!')
         # update board
         x,y=move
+        if self.pieces[x,y]!=0:
+            print('current value : ',self.pieces[x,y])
+            raise Exception('not a legal move!')
         self.pieces[x,y]=color
         
         self.last_move=[[x//3,y//3],[x%3,y%3]]
@@ -108,7 +107,6 @@ class Board():
 
     def sub_board_win(self,sub_board,last_move):
         last_x,last_y=last_move
-        last_c=sub_board[last_x,last_y]
         if len(set(sub_board[last_x]))==1:
             return True
         if len(set(sub_board[:,last_y]))==1:
@@ -120,6 +118,4 @@ class Board():
         return False
     
     def tostring(self):
-#         return pickle.dumps(self)
-#         return self.pieces.tostring()
         return self.pieces.tostring()+bytes(str(self.activation_zone),encoding='utf8')
