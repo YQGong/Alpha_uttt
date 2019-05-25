@@ -114,4 +114,4 @@ class Board():
     def tostring(self):
 #         return pickle.dumps(self)
 #         return self.pieces.tostring()
-        return str(self.pieces)+str(self.activation_zone)
+        return self.pieces.tostring()+bytes(str(self.activation_zone),encoding='utf8')
