@@ -9,17 +9,28 @@ import time
 if __name__=='__main__':
     b=Board(9)
     current_color=1
-    mcts=MCTS(1,10,30)
-    pool=Pool(30)
+    times_num=20
+    process_num=30
+    cparameter=0.3
+    mcts=MCTS(cparameter,times_num,process_num)
+    pool=Pool(process_num)
     cmd='init'
     while cmd!='exit':
         if cmd=='init':
             b.execute_move(np.array([6,5]) - 1, current_color)
             current_color *= -1
-            b.execute_move(np.array([8,6]) - 1, current_color)
+            b.execute_move(np.array([9,5]) - 1, current_color)
+            current_color *= -1
+            b.execute_move(np.array([8,4]) - 1, current_color)
+            current_color *= -1
+            b.execute_move(np.array([6,3]) - 1, current_color)
+            current_color *= -1
+            b.execute_move(np.array([9,9]) - 1, current_color)
+            current_color *= -1
+            b.execute_move(np.array([8,9]) - 1, current_color)
             current_color *= -1
         if cmd=='do':
-            for i in tqdm(range(20)):
+            for i in tqdm(range(10)):
                 for j in range(100):
                     mcts.search(b, current_color, pool)
         if cmd=='show best':
@@ -29,10 +40,12 @@ if __name__=='__main__':
                 s = copy(b).execute_move(move, current_color).tostring()
                 Ns_list.append(mcts.Ns[s])
                 Qs_list.append(mcts.Qs[s])
-            max_move = np.array(Ns_list).argmax()
+            value_list=[Qs_list[i]*10000//Ns_list[i] for i in range(len(Qs_list))]
+            move_list=[i[0]*10+i[1]+11 for i in b.get_legal_moves(current_color)]
+            max_move = np.array(value_list).argmax()
             next_move = b.get_legal_moves(current_color)[max_move]
-            print(next_move + 1, Ns_list[max_move], Qs_list[max_move])
-            print(np.array([Ns_list, Qs_list]))
+            print(next_move + 1, Ns_list[max_move], Qs_list[max_move],value_list[max_move])
+            print(np.array([Ns_list, Qs_list,value_list,move_list]))
         if cmd=='next move':
             str=input('position:')
             next_move=[int(i) for i in str.split(' ')]
@@ -40,6 +53,12 @@ if __name__=='__main__':
             current_color *= -1
         if cmd=='show':
             print(b.pieces)
+        if cmd=='update times':
+            value=input('value:')
+            mcts.times=value
+        if cmd=='update process':
+            value=input('value:(less than {})'.format(process_num))
+            mcts.process=value
         cmd=input('command:')
 
 if False:

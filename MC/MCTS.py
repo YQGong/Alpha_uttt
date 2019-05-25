@@ -9,13 +9,12 @@ import os
 
 class MCTS():
 
-    def __init__(self,cucpt=1,times=10,process=30):
+    def __init__(self,cucpt=1,times=1,process=1):
         self.Qs={}
         self.Ns={}
         self.cpuct=cucpt
         self.times = times
         self.process=process
-        self.pool=None
 
     def one_search(self, board, color):
         b = copy(board)
@@ -104,5 +103,5 @@ class MCTS():
 
         # back propagation for non-leaf node
         self.Qs[s] -= v  # Qs : the value of the previous move
-        self.Ns[s] += self.times
+        self.Ns[s] += self.times*self.process
         return -v
